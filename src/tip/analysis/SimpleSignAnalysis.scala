@@ -60,10 +60,10 @@ class SimpleSignAnalysis(cfg: ProgramCfg)(implicit declData: DeclarationData) ex
           case Minus => minus(left, right)
           case Plus => plus(left, right)
           case Times => times(left, right)
-          case _ => ???
+          case _ => valuelattice.top
         }
       case _: AInput => valuelattice.top
-      case _ => ???
+      case _ => valuelattice.top
     }
   }
 
@@ -85,10 +85,15 @@ class SimpleSignAnalysis(cfg: ProgramCfg)(implicit declData: DeclarationData) ex
       case r: CfgStmtNode =>
         r.data match {
           // var declarations
-          case varr: AVarStmt => ??? //<--- Complete here
+          case varr: AVarStmt => // [[var x;]] = JOIN(n)[x -> ?]
+            varr.declIds.foreach(decl => {
+              s + (decl -> valuelattice.top)
+            })
+            s
 
           // assignments
-          case AAssignStmt(id: AIdentifier, right, _) => ??? //<--- Complete here
+          case AAssignStmt(id: AIdentifier, right, _) => // [[x = E;]] = JOIN(n)[x -> eval(JOIN(n), E)]
+            s + (declData(id) -> eval(right, s))
 
           // all others: like no-ops
           case _ => s
