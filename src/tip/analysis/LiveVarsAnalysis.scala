@@ -3,6 +3,7 @@ package tip.analysis
 import tip.ast._
 import tip.lattices._
 import tip.ast.AstNodeData.DeclarationData
+import tip.ast.AstOps.AstOp
 import tip.solvers._
 import tip.cfg._
 
@@ -25,15 +26,21 @@ abstract class LiveVarsAnalysis(cfg: IntraproceduralProgramCfg)(implicit declDat
       case _: CfgFunExitNode => lattice.sublattice.bottom
       case r: CfgStmtNode =>
         r.data match {
-          case cond: AExpr => ??? //<--- Complete here
+          case cond: AExpr =>
+            lattice.sublattice.lub(s, cond.appearingIds)
           case as: AAssignStmt =>
             as.left match {
-              case id: AIdentifier => ??? //<--- Complete here
-              case _ => ???
+              case id: AIdentifier => // [[x = E;]] = JOIN(n] \ {x} U vars(E)
+                lattice.sublattice.lub(s - declData(id), as.right.appearingIds)
+              case _ => // [[n]] = JOIN(n) U vars(n)
+                lattice.sublattice.lub(s, as.right.appearingIds)
             }
-          case varr: AVarStmt => ??? //<--- Complete here
-          case ret: AReturnStmt => ??? //<--- Complete here
-          case out: AOutputStmt => ??? //<--- Complete here
+          case varr: AVarStmt =>  // [[var x;]] = JOIN(n) \ {x}
+            s -- varr.declIds
+          case ret: AReturnStmt =>
+            lattice.sublattice.lub(s, ret.appearingIds)
+          case out: AOutputStmt =>
+            lattice.sublattice.lub(s, out.appearingIds)
           case _ => s
         }
       case _ => s
