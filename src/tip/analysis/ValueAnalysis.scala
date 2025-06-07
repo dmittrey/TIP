@@ -69,10 +69,14 @@ trait ValueAnalysisMisc {
       case r: CfgStmtNode =>
         r.data match {
           // var declarations
-          case varr: AVarStmt => ??? //<--- Complete here
+          // Считаю что связываем пока что не связанную переменную как bottom,
+          // Чтобы потом двигаться наверх при расширении интервала
+          case varr: AVarStmt =>
+            s ++ varr.declIds.map(decl => {decl -> valuelattice.bottom}).toMap
 
           // assignments
-          case AAssignStmt(id: AIdentifier, right, _) => ??? //<--- Complete here
+          case AAssignStmt(id: AIdentifier, right, _) =>
+            s + (declData(id)-> eval(right, s))
 
           // all others: like no-ops
           case _ => s
