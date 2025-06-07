@@ -125,7 +125,7 @@ object VariableSizeLattice extends LatticeWithOps {
   }
 
   /** Abstract equality: precise B1 if same, else Any */
-  def eqq(a: Element, b: Element): Element = if (a == b) B1 else Any
+  def eqq(a: Element, b: Element): Element = if (a == b) B1 else B0
 
   /** Abstract greater-than: precise B1 if lower bound of a > upper of b, B0 if upper of a <= lower of b, else Any */
   def gt(a: Element, b: Element): Element = {
